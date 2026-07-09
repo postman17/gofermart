@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -14,11 +15,11 @@ import (
 
 func TestRegisterUser_Success(t *testing.T) {
 	repos := &mockDBRepository{
-		registerUserFunc: func(login, password string) error {
+		registerUserFunc: func(ctx context.Context, login, password string) error {
 			return nil
 		},
 	}
-	handler := RegisterUser(repos)
+	handler := RegisterUser(context.Background(), repos)
 
 	body, _ := json.Marshal(models.AuthUser{Login: "testuser", Password: "testpass"})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/register", strings.NewReader(string(body)))
@@ -33,7 +34,7 @@ func TestRegisterUser_Success(t *testing.T) {
 
 func TestRegisterUser_WrongMethod(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := RegisterUser(repos)
+	handler := RegisterUser(context.Background(), repos)
 
 	for _, method := range []string{http.MethodGet, http.MethodPut, http.MethodDelete, http.MethodPatch} {
 		req := httptest.NewRequest(method, "/api/user/register", nil)
@@ -48,7 +49,7 @@ func TestRegisterUser_WrongMethod(t *testing.T) {
 
 func TestRegisterUser_InvalidJSON(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := RegisterUser(repos)
+	handler := RegisterUser(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/user/register", strings.NewReader("not json"))
 	rw := httptest.NewRecorder()
@@ -62,7 +63,7 @@ func TestRegisterUser_InvalidJSON(t *testing.T) {
 
 func TestRegisterUser_EmptyLoginOrPassword(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := RegisterUser(repos)
+	handler := RegisterUser(context.Background(), repos)
 
 	tests := []struct {
 		name     string
@@ -90,11 +91,11 @@ func TestRegisterUser_EmptyLoginOrPassword(t *testing.T) {
 
 func TestRegisterUser_UserAlreadyExists(t *testing.T) {
 	repos := &mockDBRepository{
-		registerUserFunc: func(login, password string) error {
+		registerUserFunc: func(ctx context.Context, login, password string) error {
 			return errorInternal.ErrUserAlreadyExists
 		},
 	}
-	handler := RegisterUser(repos)
+	handler := RegisterUser(context.Background(), repos)
 
 	body, _ := json.Marshal(models.AuthUser{Login: "existing", Password: "pass"})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/register", strings.NewReader(string(body)))
@@ -109,11 +110,11 @@ func TestRegisterUser_UserAlreadyExists(t *testing.T) {
 
 func TestRegisterUser_RepositoryError(t *testing.T) {
 	repos := &mockDBRepository{
-		registerUserFunc: func(login, password string) error {
+		registerUserFunc: func(ctx context.Context, login, password string) error {
 			return errors.New("db error")
 		},
 	}
-	handler := RegisterUser(repos)
+	handler := RegisterUser(context.Background(), repos)
 
 	body, _ := json.Marshal(models.AuthUser{Login: "user", Password: "pass"})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/register", strings.NewReader(string(body)))

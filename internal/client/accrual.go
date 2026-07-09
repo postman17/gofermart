@@ -4,17 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	models "github.com/postman17/gofermart/internal/model"
 )
 
 func (a *AccrualSystemClient) GetAccrual(orderId string) (models.OrderResult, error) {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
 	url := fmt.Sprintf("%s/api/orders/%s", a.Url, orderId)
-	resp, err := client.Get(url)
+	resp, err := a.c.Get(url)
 	if err != nil {
 		return models.OrderResult{}, fmt.Errorf("request error: %w", err)
 	}

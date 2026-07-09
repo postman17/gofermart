@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -50,7 +51,7 @@ func IsValidLuhn(s string) bool {
 	return sum%10 == 0 && sum > 0
 }
 
-func AddOrder(repos repo.DBRepository, client clients.AccrualSystemClient) http.HandlerFunc {
+func AddOrder(ctx context.Context, repos repo.DBRepository, client clients.AccrualSystemClient) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			rw.WriteHeader(http.StatusMethodNotAllowed)
@@ -76,7 +77,7 @@ func AddOrder(repos repo.DBRepository, client clients.AccrualSystemClient) http.
 			rw.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		checkResult, err := repos.CheckOrderOwnership(receivedText, userID)
+		checkResult, err := repos.CheckOrderOwnership(ctx, receivedText, userID)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			return
@@ -97,13 +98,21 @@ func AddOrder(repos repo.DBRepository, client clients.AccrualSystemClient) http.
 			return
 		}
 
-		repos.CreateOrder(userID, receivedText, result)
-		repos.AccrueBalance(userID, int64(result.Accrual))
+		_, err = repos.CreateOrder(ctx, userID, receivedText, result)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		err = repos.AccrueBalance(ctx, userID, int64(result.Accrual))
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		rw.WriteHeader(http.StatusAccepted)
 	}
 }
 
-func GetOrders(repos repo.DBRepository) http.HandlerFunc {
+func GetOrders(ctx context.Context, repos repo.DBRepository) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			rw.WriteHeader(http.StatusMethodNotAllowed)
@@ -115,7 +124,7 @@ func GetOrders(repos repo.DBRepository) http.HandlerFunc {
 			return
 		}
 
-		resp, err := repos.GetOrdersByUserID(userID)
+		resp, err := repos.GetOrdersByUserID(ctx, userID)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			return

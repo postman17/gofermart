@@ -15,11 +15,11 @@ import (
 
 func TestWithdraw_Success(t *testing.T) {
 	repos := &mockDBRepository{
-		withdrawFunc: func(orderID string, userID int64, amount int64) error {
+		withdrawFunc: func(ctx context.Context, orderID string, userID int64, amount int64) error {
 			return nil
 		},
 	}
-	handler := Withdraw(repos)
+	handler := Withdraw(context.Background(), repos)
 
 	body, _ := json.Marshal(models.Withdraw{Order: "79927398713", TotalSum: 100})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/balance/withdraw", strings.NewReader(string(body)))
@@ -35,7 +35,7 @@ func TestWithdraw_Success(t *testing.T) {
 
 func TestWithdraw_WrongMethod(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := Withdraw(repos)
+	handler := Withdraw(context.Background(), repos)
 
 	for _, method := range []string{http.MethodGet, http.MethodPut, http.MethodDelete} {
 		req := httptest.NewRequest(method, "/api/user/balance/withdraw", nil)
@@ -50,7 +50,7 @@ func TestWithdraw_WrongMethod(t *testing.T) {
 
 func TestWithdraw_InvalidJSON(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := Withdraw(repos)
+	handler := Withdraw(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/user/balance/withdraw", strings.NewReader("not json"))
 	req = req.WithContext(context.WithValue(req.Context(), "userID", int64(1)))
@@ -65,7 +65,7 @@ func TestWithdraw_InvalidJSON(t *testing.T) {
 
 func TestWithdraw_EmptyOrderOrZeroSum(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := Withdraw(repos)
+	handler := Withdraw(context.Background(), repos)
 
 	tests := []struct {
 		name string
@@ -92,7 +92,7 @@ func TestWithdraw_EmptyOrderOrZeroSum(t *testing.T) {
 
 func TestWithdraw_InvalidLuhnOrder(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := Withdraw(repos)
+	handler := Withdraw(context.Background(), repos)
 
 	body, _ := json.Marshal(models.Withdraw{Order: "12345678901", TotalSum: 100})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/balance/withdraw", strings.NewReader(string(body)))
@@ -108,7 +108,7 @@ func TestWithdraw_InvalidLuhnOrder(t *testing.T) {
 
 func TestWithdraw_MissingUserID(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := Withdraw(repos)
+	handler := Withdraw(context.Background(), repos)
 
 	body, _ := json.Marshal(models.Withdraw{Order: "79927398713", TotalSum: 100})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/balance/withdraw", strings.NewReader(string(body)))
@@ -123,11 +123,11 @@ func TestWithdraw_MissingUserID(t *testing.T) {
 
 func TestWithdraw_InsufficientFunds(t *testing.T) {
 	repos := &mockDBRepository{
-		withdrawFunc: func(orderID string, userID int64, amount int64) error {
+		withdrawFunc: func(ctx context.Context, orderID string, userID int64, amount int64) error {
 			return errorInternal.ErrInsufficientFunds
 		},
 	}
-	handler := Withdraw(repos)
+	handler := Withdraw(context.Background(), repos)
 
 	body, _ := json.Marshal(models.Withdraw{Order: "79927398713", TotalSum: 9999})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/balance/withdraw", strings.NewReader(string(body)))
@@ -143,11 +143,11 @@ func TestWithdraw_InsufficientFunds(t *testing.T) {
 
 func TestWithdraw_InvalidAmount(t *testing.T) {
 	repos := &mockDBRepository{
-		withdrawFunc: func(orderID string, userID int64, amount int64) error {
+		withdrawFunc: func(ctx context.Context, orderID string, userID int64, amount int64) error {
 			return errorInternal.ErrInvalidAmount
 		},
 	}
-	handler := Withdraw(repos)
+	handler := Withdraw(context.Background(), repos)
 
 	body, _ := json.Marshal(models.Withdraw{Order: "79927398713", TotalSum: 100})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/balance/withdraw", strings.NewReader(string(body)))
@@ -163,11 +163,11 @@ func TestWithdraw_InvalidAmount(t *testing.T) {
 
 func TestWithdraw_RepositoryError(t *testing.T) {
 	repos := &mockDBRepository{
-		withdrawFunc: func(orderID string, userID int64, amount int64) error {
+		withdrawFunc: func(ctx context.Context, orderID string, userID int64, amount int64) error {
 			return errors.New("db error")
 		},
 	}
-	handler := Withdraw(repos)
+	handler := Withdraw(context.Background(), repos)
 
 	body, _ := json.Marshal(models.Withdraw{Order: "79927398713", TotalSum: 100})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/balance/withdraw", strings.NewReader(string(body)))
@@ -187,11 +187,11 @@ func TestUserWithdrawals_Success(t *testing.T) {
 		{Order: "49927398716", TotalSum: 200},
 	}
 	repos := &mockDBRepository{
-		getUserWithdrawalsFunc: func(userID int64) ([]models.Withdraw, error) {
+		getUserWithdrawalsFunc: func(ctx context.Context, userID int64) ([]models.Withdraw, error) {
 			return withdrawals, nil
 		},
 	}
-	handler := UserWithdrawals(repos)
+	handler := UserWithdrawals(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/user/withdrawals", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "userID", int64(1)))
@@ -206,7 +206,7 @@ func TestUserWithdrawals_Success(t *testing.T) {
 
 func TestUserWithdrawals_WrongMethod(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := UserWithdrawals(repos)
+	handler := UserWithdrawals(context.Background(), repos)
 
 	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete} {
 		req := httptest.NewRequest(method, "/api/user/withdrawals", nil)
@@ -221,7 +221,7 @@ func TestUserWithdrawals_WrongMethod(t *testing.T) {
 
 func TestUserWithdrawals_MissingUserID(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := UserWithdrawals(repos)
+	handler := UserWithdrawals(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/user/withdrawals", nil)
 	rw := httptest.NewRecorder()
@@ -235,11 +235,11 @@ func TestUserWithdrawals_MissingUserID(t *testing.T) {
 
 func TestUserWithdrawals_NoWithdrawals(t *testing.T) {
 	repos := &mockDBRepository{
-		getUserWithdrawalsFunc: func(userID int64) ([]models.Withdraw, error) {
+		getUserWithdrawalsFunc: func(ctx context.Context, userID int64) ([]models.Withdraw, error) {
 			return []models.Withdraw{}, nil
 		},
 	}
-	handler := UserWithdrawals(repos)
+	handler := UserWithdrawals(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/user/withdrawals", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "userID", int64(1)))
@@ -254,11 +254,11 @@ func TestUserWithdrawals_NoWithdrawals(t *testing.T) {
 
 func TestUserWithdrawals_RepositoryError(t *testing.T) {
 	repos := &mockDBRepository{
-		getUserWithdrawalsFunc: func(userID int64) ([]models.Withdraw, error) {
+		getUserWithdrawalsFunc: func(ctx context.Context, userID int64) ([]models.Withdraw, error) {
 			return nil, errors.New("db error")
 		},
 	}
-	handler := UserWithdrawals(repos)
+	handler := UserWithdrawals(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/user/withdrawals", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "userID", int64(1)))

@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	repo "github.com/postman17/gofermart/internal/repository"
 )
 
-func GetBalance(repos repo.DBRepository) http.HandlerFunc {
+func GetBalance(ctx context.Context, repos repo.DBRepository) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			rw.WriteHeader(http.StatusMethodNotAllowed)
@@ -19,7 +20,7 @@ func GetBalance(repos repo.DBRepository) http.HandlerFunc {
 			return
 		}
 
-		resp, err := repos.GetBalance(userID)
+		resp, err := repos.GetBalance(ctx, userID)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			return

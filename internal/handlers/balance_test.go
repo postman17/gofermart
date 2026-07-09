@@ -14,11 +14,11 @@ import (
 func TestGetBalance_Success(t *testing.T) {
 	expected := models.Balance{ID: 1, Current: 500, Withdrawn: 100}
 	repos := &mockDBRepository{
-		getBalanceFunc: func(userID int64) (models.Balance, error) {
+		getBalanceFunc: func(ctx context.Context, userID int64) (models.Balance, error) {
 			return expected, nil
 		},
 	}
-	handler := GetBalance(repos)
+	handler := GetBalance(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/user/balance", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "userID", int64(1)))
@@ -33,7 +33,7 @@ func TestGetBalance_Success(t *testing.T) {
 
 func TestGetBalance_WrongMethod(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := GetBalance(repos)
+	handler := GetBalance(context.Background(), repos)
 
 	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete} {
 		req := httptest.NewRequest(method, "/api/user/balance", nil)
@@ -48,7 +48,7 @@ func TestGetBalance_WrongMethod(t *testing.T) {
 
 func TestGetBalance_MissingUserID(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := GetBalance(repos)
+	handler := GetBalance(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/user/balance", nil)
 	rw := httptest.NewRecorder()
@@ -62,7 +62,7 @@ func TestGetBalance_MissingUserID(t *testing.T) {
 
 func TestGetBalance_WrongUserIDType(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := GetBalance(repos)
+	handler := GetBalance(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/user/balance", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "userID", "not-an-int64"))
@@ -77,11 +77,11 @@ func TestGetBalance_WrongUserIDType(t *testing.T) {
 
 func TestGetBalance_RepositoryError(t *testing.T) {
 	repos := &mockDBRepository{
-		getBalanceFunc: func(userID int64) (models.Balance, error) {
+		getBalanceFunc: func(ctx context.Context, userID int64) (models.Balance, error) {
 			return models.Balance{}, errors.New("db error")
 		},
 	}
-	handler := GetBalance(repos)
+	handler := GetBalance(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/user/balance", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "userID", int64(1)))
@@ -97,11 +97,11 @@ func TestGetBalance_RepositoryError(t *testing.T) {
 func TestGetBalance_ResponseJSON(t *testing.T) {
 	expected := models.Balance{ID: 1, Current: 500, Withdrawn: 100}
 	repos := &mockDBRepository{
-		getBalanceFunc: func(userID int64) (models.Balance, error) {
+		getBalanceFunc: func(ctx context.Context, userID int64) (models.Balance, error) {
 			return expected, nil
 		},
 	}
-	handler := GetBalance(repos)
+	handler := GetBalance(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/user/balance", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "userID", int64(1)))

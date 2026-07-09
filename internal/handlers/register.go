@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,7 +12,7 @@ import (
 	repo "github.com/postman17/gofermart/internal/repository"
 )
 
-func RegisterUser(repos repo.DBRepository) http.HandlerFunc {
+func RegisterUser(ctx context.Context, repos repo.DBRepository) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-Type", "application/json")
 		if r.Method != http.MethodPost {
@@ -37,7 +38,7 @@ func RegisterUser(repos repo.DBRepository) http.HandlerFunc {
 			return
 		}
 
-		err = repos.RegisterUser(req.Login, req.Password)
+		err = repos.RegisterUser(ctx, req.Login, req.Password)
 		if err != nil {
 			if errors.Is(err, error.ErrUserAlreadyExists) {
 				rw.WriteHeader(http.StatusConflict)

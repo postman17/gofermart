@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
@@ -11,8 +12,8 @@ import (
 	hash "github.com/postman17/gofermart/internal/hash"
 )
 
-func (d *DBStorage) RegisterUser(login string, password string) error {
-	exists, err := d.UserExists(login)
+func (d *DBStorage) RegisterUser(ctx context.Context, login string, password string) error {
+	exists, err := d.UserExists(ctx, login)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errorsInternal.ErrUserAlreadyExists, login)
 	}
@@ -27,7 +28,7 @@ func (d *DBStorage) RegisterUser(login string, password string) error {
 	}
 
 	query := "INSERT INTO users (login, password) VALUES ($1, $2)"
-	_, err = d.db.ExecContext(d.ctx, query, login, hashedPassword)
+	_, err = d.db.ExecContext(ctx, query, login, hashedPassword)
 	if err != nil {
 		return fmt.Errorf("failed to insert user: %w", err)
 	}
@@ -35,11 +36,11 @@ func (d *DBStorage) RegisterUser(login string, password string) error {
 	return nil
 }
 
-func (d *DBStorage) UserExists(login string) (bool, error) {
+func (d *DBStorage) UserExists(ctx context.Context, login string) (bool, error) {
 	var exists bool
 
 	query := "SELECT EXISTS(SELECT 1 FROM users WHERE login = $1)"
-	err := d.db.QueryRowContext(d.ctx, query, login).Scan(&exists)
+	err := d.db.QueryRowContext(ctx, query, login).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("failed to check user existence: %w", err)
 	}
@@ -47,14 +48,14 @@ func (d *DBStorage) UserExists(login string) (bool, error) {
 	return exists, nil
 }
 
-func (d *DBStorage) AuthenticateUser(login string, password string) (int64, error) {
+func (d *DBStorage) AuthenticateUser(ctx context.Context, login string, password string) (int64, error) {
 	var (
 		userID     int64
 		storedHash string
 	)
 
 	query := "SELECT id, password FROM users WHERE login = $1"
-	err := d.db.QueryRowContext(d.ctx, query, login).Scan(&storedHash)
+	err := d.db.QueryRowContext(ctx, query, login).Scan(&storedHash)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return 0, nil
@@ -69,7 +70,7 @@ func (d *DBStorage) AuthenticateUser(login string, password string) (int64, erro
 	return userID, nil
 }
 
-func (d *DBStorage) CreateOrUpdateSession(userID int64) (string, error) {
+func (d *DBStorage) CreateOrUpdateSession(ctx context.Context, userID int64) (string, error) {
 	token, err := generateRandomToken(20)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate session token: %w", err)
@@ -86,7 +87,7 @@ func (d *DBStorage) CreateOrUpdateSession(userID int64) (string, error) {
 	`
 
 	var returnedToken string
-	err = d.db.QueryRowContext(d.ctx, query, userID, token).Scan(&returnedToken)
+	err = d.db.QueryRowContext(ctx, query, userID, token).Scan(&returnedToken)
 	if err != nil {
 		return "", fmt.Errorf("failed to upsert session in database: %w", err)
 	}
@@ -107,11 +108,11 @@ func generateRandomToken(length int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func (d *DBStorage) GetUserIDByToken(token string) (int64, error) {
+func (d *DBStorage) GetUserIDByToken(ctx context.Context, token string) (int64, error) {
 	var userID int64
 
 	query := `SELECT user_id FROM sessions WHERE token = $1 LIMIT 1;`
-	err := d.db.QueryRowContext(d.ctx, query, token).Scan(&userID)
+	err := d.db.QueryRowContext(ctx, query, token).Scan(&userID)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

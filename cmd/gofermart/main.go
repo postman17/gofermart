@@ -34,11 +34,11 @@ func main() {
 	repository := newDBRepository(appCtx, config)
 
 	r := chi.NewRouter()
-	r.Post("/api/user/register", handlers.RegisterUser(repository))
-	r.Post("/api/user/login", handlers.LoginUser(repository))
-	r.Post("/api/user/orders", AuthMiddleware(repository)(handlers.AddOrder(repository, client)))
-	r.Get("/api/user/orders", AuthMiddleware(repository)(handlers.GetOrders(repository)))
-	r.Get("/api/user/balance", AuthMiddleware(repository)(handlers.GetBalance(repository)))
-	r.Post("/api/user/balance/withdraw", AuthMiddleware(repository)(handlers.Withdraw(repository)))
-	r.Get("/api/user/withdrawals", AuthMiddleware(repository)(handlers.UserWithdrawals(repository)))
+	r.Post("/api/user/register", handlers.RegisterUser(appCtx, repository))
+	r.Post("/api/user/login", handlers.LoginUser(appCtx, repository))
+	r.Post("/api/user/orders", AuthMiddleware(appCtx, repository)(handlers.AddOrder(appCtx, repository, client)))
+	r.Get("/api/user/orders", AuthMiddleware(appCtx, repository)(handlers.GetOrders(appCtx, repository)))
+	r.Get("/api/user/balance", AuthMiddleware(appCtx, repository)(handlers.GetBalance(appCtx, repository)))
+	r.Post("/api/user/balance/withdraw", AuthMiddleware(appCtx, repository)(handlers.Withdraw(appCtx, repository)))
+	r.Get("/api/user/withdrawals", AuthMiddleware(appCtx, repository)(handlers.UserWithdrawals(appCtx, repository)))
 }

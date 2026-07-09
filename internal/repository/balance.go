@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -8,7 +9,7 @@ import (
 	models "github.com/postman17/gofermart/internal/model"
 )
 
-func (d *DBStorage) GetBalance(userID int64) (models.Balance, error) {
+func (d *DBStorage) GetBalance(ctx context.Context, userID int64) (models.Balance, error) {
 	query := `
 		SELECT current, withdrawn 
 		FROM user_balances 
@@ -17,7 +18,7 @@ func (d *DBStorage) GetBalance(userID int64) (models.Balance, error) {
 
 	var b models.Balance
 
-	err := d.db.QueryRowContext(d.ctx, query, userID).Scan(&b.Current, &b.Withdrawn)
+	err := d.db.QueryRowContext(ctx, query, userID).Scan(&b.Current, &b.Withdrawn)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -32,7 +33,7 @@ func (d *DBStorage) GetBalance(userID int64) (models.Balance, error) {
 	return b, nil
 }
 
-func (d *DBStorage) AccrueBalance(userId int64, amount int64) error {
+func (d *DBStorage) AccrueBalance(ctx context.Context, userId int64, amount int64) error {
 	if amount <= 0 {
 		return fmt.Errorf("amount must be greater than 0: %d", amount)
 	}
@@ -46,7 +47,7 @@ func (d *DBStorage) AccrueBalance(userId int64, amount int64) error {
 			updated_at = NOW();
 	`
 
-	_, err := d.db.ExecContext(d.ctx, query, userId, amount)
+	_, err := d.db.ExecContext(ctx, query, userId, amount)
 	if err != nil {
 		return fmt.Errorf("error in accrual %d: %w", userId, err)
 	}

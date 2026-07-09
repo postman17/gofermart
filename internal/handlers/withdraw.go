@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,7 +12,7 @@ import (
 	repo "github.com/postman17/gofermart/internal/repository"
 )
 
-func Withdraw(repos repo.DBRepository) http.HandlerFunc {
+func Withdraw(ctx context.Context, repos repo.DBRepository) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			rw.WriteHeader(http.StatusMethodNotAllowed)
@@ -47,10 +48,11 @@ func Withdraw(repos repo.DBRepository) http.HandlerFunc {
 			return
 		}
 
-		err = repos.Withdraw(req.Order, userID, req.TotalSum)
+		err = repos.Withdraw(ctx, req.Order, userID, req.TotalSum)
 		if err != nil {
 			if errors.Is(err, errorInternal.ErrInsufficientFunds) {
 				rw.WriteHeader(http.StatusPaymentRequired)
+				return
 			}
 			if errors.Is(err, errorInternal.ErrInvalidAmount) {
 				rw.WriteHeader(http.StatusBadRequest)
@@ -63,7 +65,7 @@ func Withdraw(repos repo.DBRepository) http.HandlerFunc {
 	}
 }
 
-func UserWithdrawals(repos repo.DBRepository) http.HandlerFunc {
+func UserWithdrawals(ctx context.Context, repos repo.DBRepository) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			rw.WriteHeader(http.StatusMethodNotAllowed)
@@ -75,7 +77,7 @@ func UserWithdrawals(repos repo.DBRepository) http.HandlerFunc {
 			return
 		}
 
-		resp, err := repos.GetUserWithdrawals(userID)
+		resp, err := repos.GetUserWithdrawals(ctx, userID)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			return

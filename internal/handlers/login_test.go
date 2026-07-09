@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -13,14 +14,14 @@ import (
 
 func TestLoginUser_Success(t *testing.T) {
 	repos := &mockDBRepository{
-		authenticateUserFunc: func(login, password string) (int64, error) {
+		authenticateUserFunc: func(ctx context.Context, login, password string) (int64, error) {
 			return 1, nil
 		},
-		createOrUpdateSessionFunc: func(userID int64) (string, error) {
+		createOrUpdateSessionFunc: func(ctx context.Context, userID int64) (string, error) {
 			return "test-jwt-token", nil
 		},
 	}
-	handler := LoginUser(repos)
+	handler := LoginUser(context.Background(), repos)
 
 	body, _ := json.Marshal(models.AuthUser{Login: "testuser", Password: "testpass"})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/login", strings.NewReader(string(body)))
@@ -39,7 +40,7 @@ func TestLoginUser_Success(t *testing.T) {
 
 func TestLoginUser_WrongMethod(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := LoginUser(repos)
+	handler := LoginUser(context.Background(), repos)
 
 	for _, method := range []string{http.MethodGet, http.MethodPut, http.MethodDelete} {
 		req := httptest.NewRequest(method, "/api/user/login", nil)
@@ -54,7 +55,7 @@ func TestLoginUser_WrongMethod(t *testing.T) {
 
 func TestLoginUser_InvalidJSON(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := LoginUser(repos)
+	handler := LoginUser(context.Background(), repos)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/user/login", strings.NewReader("not json"))
 	rw := httptest.NewRecorder()
@@ -68,7 +69,7 @@ func TestLoginUser_InvalidJSON(t *testing.T) {
 
 func TestLoginUser_EmptyLoginOrPassword(t *testing.T) {
 	repos := &mockDBRepository{}
-	handler := LoginUser(repos)
+	handler := LoginUser(context.Background(), repos)
 
 	tests := []struct {
 		name string
@@ -94,11 +95,11 @@ func TestLoginUser_EmptyLoginOrPassword(t *testing.T) {
 
 func TestLoginUser_InvalidCredentials(t *testing.T) {
 	repos := &mockDBRepository{
-		authenticateUserFunc: func(login, password string) (int64, error) {
+		authenticateUserFunc: func(ctx context.Context, login, password string) (int64, error) {
 			return 0, nil
 		},
 	}
-	handler := LoginUser(repos)
+	handler := LoginUser(context.Background(), repos)
 
 	body, _ := json.Marshal(models.AuthUser{Login: "testuser", Password: "wrongpass"})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/login", strings.NewReader(string(body)))
@@ -113,11 +114,11 @@ func TestLoginUser_InvalidCredentials(t *testing.T) {
 
 func TestLoginUser_AuthenticateError(t *testing.T) {
 	repos := &mockDBRepository{
-		authenticateUserFunc: func(login, password string) (int64, error) {
+		authenticateUserFunc: func(ctx context.Context, login, password string) (int64, error) {
 			return 0, errors.New("db error")
 		},
 	}
-	handler := LoginUser(repos)
+	handler := LoginUser(context.Background(), repos)
 
 	body, _ := json.Marshal(models.AuthUser{Login: "testuser", Password: "testpass"})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/login", strings.NewReader(string(body)))
@@ -132,14 +133,14 @@ func TestLoginUser_AuthenticateError(t *testing.T) {
 
 func TestLoginUser_SessionError(t *testing.T) {
 	repos := &mockDBRepository{
-		authenticateUserFunc: func(login, password string) (int64, error) {
+		authenticateUserFunc: func(ctx context.Context, login, password string) (int64, error) {
 			return 1, nil
 		},
-		createOrUpdateSessionFunc: func(userID int64) (string, error) {
+		createOrUpdateSessionFunc: func(ctx context.Context, userID int64) (string, error) {
 			return "", errors.New("session error")
 		},
 	}
-	handler := LoginUser(repos)
+	handler := LoginUser(context.Background(), repos)
 
 	body, _ := json.Marshal(models.AuthUser{Login: "testuser", Password: "testpass"})
 	req := httptest.NewRequest(http.MethodPost, "/api/user/login", strings.NewReader(string(body)))

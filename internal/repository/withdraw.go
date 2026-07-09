@@ -1,18 +1,19 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 
 	errorInternal "github.com/postman17/gofermart/internal/errors"
 	models "github.com/postman17/gofermart/internal/model"
 )
 
-func (d *DBStorage) Withdraw(orderID string, userID int64, amount int64) error {
+func (d *DBStorage) Withdraw(ctx context.Context, orderID string, userID int64, amount int64) error {
 	if amount <= 0 {
 		return errorInternal.ErrInvalidAmount
 	}
 
-	tx, err := d.db.BeginTx(d.ctx, nil)
+	tx, err := d.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin tx: %w", err)
 	}
@@ -26,7 +27,7 @@ func (d *DBStorage) Withdraw(orderID string, userID int64, amount int64) error {
 			updated_at = NOW()
 		WHERE user_id = $2 AND current >= $1::NUMERIC`
 
-	result, err := tx.ExecContext(d.ctx, query, amount, userID)
+	result, err := tx.ExecContext(ctx, query, amount, userID)
 	if err != nil {
 		return fmt.Errorf("failed to execute debit query: %w", err)
 	}
@@ -44,7 +45,7 @@ func (d *DBStorage) Withdraw(orderID string, userID int64, amount int64) error {
 		INSERT INTO withdraw (user_id, "order", total_sum) 
 		VALUES ($1, $2, $3)`
 
-	_, err = tx.ExecContext(d.ctx, insertWithdrawQuery, userID, orderID, amount)
+	_, err = tx.ExecContext(ctx, insertWithdrawQuery, userID, orderID, amount)
 	if err != nil {
 		return fmt.Errorf("failed to insert withdraw record: %w", err)
 	}
@@ -56,14 +57,14 @@ func (d *DBStorage) Withdraw(orderID string, userID int64, amount int64) error {
 	return nil
 }
 
-func (d *DBStorage) GetUserWithdrawals(userID int64) ([]models.Withdraw, error) {
+func (d *DBStorage) GetUserWithdrawals(ctx context.Context, userID int64) ([]models.Withdraw, error) {
 	query := `
 		SELECT id, user_id, "order", total_sum, created_at 
 		FROM withdraw 
 		WHERE user_id = $1 
 		ORDER BY created_at DESC`
 
-	rows, err := d.db.QueryContext(d.ctx, query, userID)
+	rows, err := d.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query withdrawals: %w", err)
 	}

@@ -12,7 +12,7 @@ type contextKey string
 
 const userIDKey contextKey = "userID"
 
-func AuthMiddleware(repos repo.DBRepository) func(http.Handler) http.Handler {
+func AuthMiddleware(ctx context.Context, repos repo.DBRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -23,7 +23,7 @@ func AuthMiddleware(repos repo.DBRepository) func(http.Handler) http.Handler {
 			}
 			token := parts[1]
 
-			userID, err := repos.GetUserIDByToken(token)
+			userID, err := repos.GetUserIDByToken(ctx, token)
 			if err != nil {
 				http.Error(w, "Unauthorized: Invalid or expired token", http.StatusUnauthorized)
 				return

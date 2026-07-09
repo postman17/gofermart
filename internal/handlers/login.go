@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 	repo "github.com/postman17/gofermart/internal/repository"
 )
 
-func LoginUser(repos repo.DBRepository) http.HandlerFunc {
+func LoginUser(ctx context.Context, repos repo.DBRepository) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-Type", "application/json")
 		if r.Method != http.MethodPost {
@@ -35,15 +36,15 @@ func LoginUser(repos repo.DBRepository) http.HandlerFunc {
 			return
 		}
 
-		user_id, err := repos.AuthenticateUser(req.Login, req.Password)
+		userID, err := repos.AuthenticateUser(ctx, req.Login, req.Password)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			return
-		} else if user_id == 0 {
+		} else if userID == 0 {
 			rw.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		token, err := repos.CreateOrUpdateSession(user_id)
+		token, err := repos.CreateOrUpdateSession(ctx, userID)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			return
