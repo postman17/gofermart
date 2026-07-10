@@ -33,9 +33,9 @@ func (d *DBStorage) GetBalance(ctx context.Context, userID int64) (models.Balanc
 	return b, nil
 }
 
-func (d *DBStorage) AccrueBalance(ctx context.Context, userId int64, amount int64) error {
+func (d *DBStorage) AccrueBalance(ctx context.Context, userId int64, amount float64) error {
 	if amount <= 0 {
-		return fmt.Errorf("amount must be greater than 0: %d", amount)
+		return fmt.Errorf("amount must be greater than 0: %f", amount)
 	}
 
 	query := `

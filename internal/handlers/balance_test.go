@@ -114,9 +114,9 @@ func TestGetBalance_ResponseJSON(t *testing.T) {
 		t.Fatalf("failed to decode response: %v", err)
 	}
 	if result.Current != expected.Current {
-		t.Errorf("expected current %d, got %d", expected.Current, result.Current)
+		t.Errorf("expected current %f, got %f", expected.Current, result.Current)
 	}
 	if result.Withdrawn != expected.Withdrawn {
-		t.Errorf("expected withdrawn %d, got %d", expected.Withdrawn, result.Withdrawn)
+		t.Errorf("expected withdrawn %f, got %f", expected.Withdrawn, result.Withdrawn)
 	}
 }

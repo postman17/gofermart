@@ -17,7 +17,7 @@ type DBRepository interface {
 	CreateOrder(ctx context.Context, userId int64, number string, result models.OrderResult) (int, error)
 	GetOrdersByUserID(ctx context.Context, userID int64) ([]models.OrderListItem, error)
 	GetBalance(ctx context.Context, userID int64) (models.Balance, error)
-	AccrueBalance(ctx context.Context, userId int64, amount int64) error
+	AccrueBalance(ctx context.Context, userId int64, amount float64) error
 	Withdraw(ctx context.Context, orderID string, userID int64, amount int64) error
 	GetUserWithdrawals(ctx context.Context, userID int64) ([]models.Withdraw, error)
 }

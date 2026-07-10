@@ -8,9 +8,7 @@ import (
 	repo "github.com/postman17/gofermart/internal/repository"
 )
 
-type contextKey string
-
-const userIDKey contextKey = "userID"
+const userIDKey string = "userID"
 
 func AuthMiddleware(ctx context.Context, repos repo.DBRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -30,7 +28,6 @@ func AuthMiddleware(ctx context.Context, repos repo.DBRepository) func(http.Hand
 			}
 
 			ctx := context.WithValue(r.Context(), userIDKey, userID)
-
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

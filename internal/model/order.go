@@ -8,14 +8,13 @@ type OrderCheckResult struct {
 }
 
 type OrderListItem struct {
-	ID         int        `json:"id"`
-	UserID     int        `json:"user_id"`
-	Number     string     `json:"number"`
-	Status     string     `json:"status"`
-	Accrual    float64    `json:"accrual,omitempty"`
-	UploadedAt time.Time  `json:"uploaded_at"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  *time.Time `json:"updated_at,omitempty"`
+	ID         int       `json:"id"`
+	UserID     int       `json:"user_id"`
+	Number     string    `json:"number"`
+	Status     string    `json:"status"`
+	Accrual    float64   `json:"accrual,omitempty"`
+	UploadedAt time.Time `json:"uploaded_at"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 type OrderResponse struct {

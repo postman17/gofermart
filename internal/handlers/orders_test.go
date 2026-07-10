@@ -64,12 +64,12 @@ func TestAddOrder_Success(t *testing.T) {
 		createOrderFunc: func(ctx context.Context, userId int64, number string, result models.OrderResult) (int, error) {
 			return 0, nil
 		},
-		accrueBalanceFunc: func(ctx context.Context, userId int64, amount int64) error {
+		accrueBalanceFunc: func(ctx context.Context, userId int64, amount float64) error {
 			return nil
 		},
 	}
 
-	client := clients.AccrualSystemClient{Url: accrualServer.URL}
+	client := &clients.AccrualSystemClient{Url: accrualServer.URL}
 	handler := AddOrder(context.Background(), repos, client)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/user/orders", strings.NewReader("79927398713"))
@@ -85,7 +85,7 @@ func TestAddOrder_Success(t *testing.T) {
 
 func TestAddOrder_WrongMethod(t *testing.T) {
 	repos := &mockDBRepository{}
-	client := clients.AccrualSystemClient{}
+	client := &clients.AccrualSystemClient{}
 	handler := AddOrder(context.Background(), repos, client)
 
 	for _, method := range []string{http.MethodGet, http.MethodPut, http.MethodDelete} {
@@ -101,7 +101,7 @@ func TestAddOrder_WrongMethod(t *testing.T) {
 
 func TestAddOrder_InvalidLuhn(t *testing.T) {
 	repos := &mockDBRepository{}
-	client := clients.AccrualSystemClient{}
+	client := &clients.AccrualSystemClient{}
 	handler := AddOrder(context.Background(), repos, client)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/user/orders", strings.NewReader("12345678901"))
@@ -117,7 +117,7 @@ func TestAddOrder_InvalidLuhn(t *testing.T) {
 
 func TestAddOrder_MissingUserID(t *testing.T) {
 	repos := &mockDBRepository{}
-	client := clients.AccrualSystemClient{}
+	client := &clients.AccrualSystemClient{}
 	handler := AddOrder(context.Background(), repos, client)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/user/orders", strings.NewReader("79927398713"))
@@ -136,7 +136,7 @@ func TestAddOrder_OrderAlreadyExistsSameUser(t *testing.T) {
 			return models.OrderCheckResult{Exists: true, IsSameUser: true}, nil
 		},
 	}
-	client := clients.AccrualSystemClient{}
+	client := &clients.AccrualSystemClient{}
 	handler := AddOrder(context.Background(), repos, client)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/user/orders", strings.NewReader("79927398713"))
@@ -156,7 +156,7 @@ func TestAddOrder_OrderAlreadyExistsDifferentUser(t *testing.T) {
 			return models.OrderCheckResult{Exists: true, IsSameUser: false}, nil
 		},
 	}
-	client := clients.AccrualSystemClient{}
+	client := &clients.AccrualSystemClient{}
 	handler := AddOrder(context.Background(), repos, client)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/user/orders", strings.NewReader("79927398713"))
@@ -176,7 +176,7 @@ func TestAddOrder_CheckOrderOwnershipError(t *testing.T) {
 			return models.OrderCheckResult{}, errors.New("db error")
 		},
 	}
-	client := clients.AccrualSystemClient{}
+	client := &clients.AccrualSystemClient{}
 	handler := AddOrder(context.Background(), repos, client)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/user/orders", strings.NewReader("79927398713"))
@@ -196,7 +196,7 @@ func TestAddOrder_AccrualServerError(t *testing.T) {
 			return models.OrderCheckResult{Exists: false}, nil
 		},
 	}
-	client := clients.AccrualSystemClient{Url: "http://localhost:0"}
+	client := &clients.AccrualSystemClient{Url: "http://localhost:0"}
 	handler := AddOrder(context.Background(), repos, client)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/user/orders", strings.NewReader("79927398713"))

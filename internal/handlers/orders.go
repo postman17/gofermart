@@ -51,7 +51,7 @@ func IsValidLuhn(s string) bool {
 	return sum%10 == 0 && sum > 0
 }
 
-func AddOrder(ctx context.Context, repos repo.DBRepository, client clients.AccrualSystemClient) http.HandlerFunc {
+func AddOrder(ctx context.Context, repos repo.DBRepository, client clients.AccrualSystemClientRepository) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			rw.WriteHeader(http.StatusMethodNotAllowed)
@@ -103,7 +103,7 @@ func AddOrder(ctx context.Context, repos repo.DBRepository, client clients.Accru
 			rw.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		err = repos.AccrueBalance(ctx, userID, int64(result.Accrual))
+		err = repos.AccrueBalance(ctx, userID, result.Accrual)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			return

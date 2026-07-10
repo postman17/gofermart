@@ -47,7 +47,7 @@ func (d *DBStorage) CreateOrder(ctx context.Context, userId int64, number string
 
 func (d *DBStorage) GetOrdersByUserID(ctx context.Context, userID int64) ([]models.OrderListItem, error) {
 	query := `
-		SELECT id, user_id, number, status, accrual, uploaded_at, created_at, updated_at
+		SELECT id, user_id, number, status, accrual, uploaded_at, created_at
 		FROM orders
 		WHERE user_id = $1
 		ORDER BY created_at DESC;
@@ -71,7 +71,6 @@ func (d *DBStorage) GetOrdersByUserID(ctx context.Context, userID int64) ([]mode
 			&o.Accrual,
 			&o.UploadedAt,
 			&o.CreatedAt,
-			&o.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err

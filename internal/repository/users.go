@@ -15,11 +15,11 @@ import (
 func (d *DBStorage) RegisterUser(ctx context.Context, login string, password string) error {
 	exists, err := d.UserExists(ctx, login)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errorsInternal.ErrUserAlreadyExists, login)
+		return fmt.Errorf("user exists error '%s'", login)
 	}
 
 	if exists {
-		return fmt.Errorf("user with login '%s' already exists", login)
+		return fmt.Errorf("%w: %s", errorsInternal.ErrUserAlreadyExists, login)
 	}
 
 	hashedPassword, err := hash.HashPassword(password)
@@ -55,7 +55,7 @@ func (d *DBStorage) AuthenticateUser(ctx context.Context, login string, password
 	)
 
 	query := "SELECT id, password FROM users WHERE login = $1"
-	err := d.db.QueryRowContext(ctx, query, login).Scan(&storedHash)
+	err := d.db.QueryRowContext(ctx, query, login).Scan(&userID, &storedHash)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return 0, nil

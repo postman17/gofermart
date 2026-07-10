@@ -8,7 +8,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
-	projectMigrations "github.com/postman17/metrics/migrations"
+	"github.com/postman17/gofermart/migrations"
 )
 
 func runMigrations(db *sql.DB) error {
@@ -17,7 +17,7 @@ func runMigrations(db *sql.DB) error {
 		return fmt.Errorf("create migrate driver: %w", err)
 	}
 
-	source, err := iofs.New(projectMigrations.FS, ".")
+	source, err := iofs.New(migrations.FS, ".")
 	if err != nil {
 		return fmt.Errorf("create migration source: %w", err)
 	}

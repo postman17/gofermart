@@ -16,7 +16,7 @@ type mockDBRepository struct {
 	createOrderFunc           func(ctx context.Context, userId int64, number string, result models.OrderResult) (int, error)
 	getOrdersByUserIDFunc     func(ctx context.Context, userID int64) ([]models.OrderListItem, error)
 	getBalanceFunc            func(ctx context.Context, userID int64) (models.Balance, error)
-	accrueBalanceFunc         func(ctx context.Context, userId int64, amount int64) error
+	accrueBalanceFunc         func(ctx context.Context, userId int64, amount float64) error
 	withdrawFunc              func(ctx context.Context, orderID string, userID int64, amount int64) error
 	getUserWithdrawalsFunc    func(ctx context.Context, userID int64) ([]models.Withdraw, error)
 }
@@ -84,7 +84,7 @@ func (m *mockDBRepository) GetBalance(ctx context.Context, userID int64) (models
 	return models.Balance{}, nil
 }
 
-func (m *mockDBRepository) AccrueBalance(ctx context.Context, userId int64, amount int64) error {
+func (m *mockDBRepository) AccrueBalance(ctx context.Context, userId int64, amount float64) error {
 	if m.accrueBalanceFunc != nil {
 		return m.accrueBalanceFunc(ctx, userId, amount)
 	}
