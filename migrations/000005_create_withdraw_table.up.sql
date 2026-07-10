@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS withdraw (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    "order" VARCHAR(50) NOT NULL UNIQUE,
+    total_sum INT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
